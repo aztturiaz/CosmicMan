@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,9 +10,11 @@ public class PlayerController : MonoBehaviour
 	private Rigidbody2D playerRigidbody;
 	private Animator playerAnimator;
 	private float hurtCounter;
+	private bool facingRight;
 
 	#region Ground check
 	public Transform groundCheck;
+	public Transform firePoint;
 	public float groundCheckRadius;
 	public LayerMask groundLayer;
 	public bool isPlayerOnGround;
@@ -22,6 +25,7 @@ public class PlayerController : MonoBehaviour
     {
 		playerRigidbody = GetComponent<Rigidbody2D>();
 		playerAnimator = GetComponent<Animator>();
+		facingRight = true;
 	}
 
     // Update is called once per frame
@@ -38,7 +42,10 @@ public class PlayerController : MonoBehaviour
 				playerRigidbody.velocity = new Vector3(playerSpeed, playerRigidbody.velocity.y, 0f);
 
 				// Flip Sprite on X axis
-				transform.localScale = new Vector3(1f, 1f, 1f);
+				if (!facingRight)
+				{
+					FlipPlayer();
+				}
 			}
 			else if (Input.GetAxisRaw("Horizontal") < 0f)
 			{
@@ -46,7 +53,10 @@ public class PlayerController : MonoBehaviour
 				playerRigidbody.velocity = new Vector3(-playerSpeed, playerRigidbody.velocity.y, 0f);
 
 				// Flip Sprite on X axis
-				transform.localScale = new Vector3(-1f, 1f, 1f);
+				if (facingRight)
+				{
+					FlipPlayer();
+				}
 			}
 			else
 			{
@@ -96,22 +106,31 @@ public class PlayerController : MonoBehaviour
 		#endregion
 
 		#region Shooting
-		else if (/*Input.GetButtonDown("Fire1") || */Input.GetKeyDown(KeyCode.F))
+		else if (/*Input.GetButtonDown("Fire1") || */Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.V))
 		{
 			playerAnimator.SetBool("IsFiring", true);
 			if (isPlayerOnGround)
 			{
-				//FirePoint.Transform.y = -0.04
+				//FirePoint.position.y = -0.04
+				firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
 				playerAnimator.SetTrigger("Fire");
 			}
 			else
 			{
-				//FirePoint.Transform.y = 0.22
+				//FirePoint.position.y = 0.22
+				firePoint.position = new Vector3(firePoint.position.x, transform.position.y + 0.22f, firePoint.position.z);
 				playerAnimator.SetTrigger("FireOnAir");
 			}
 			
 		}
 		#endregion
+	}
+
+	private void FlipPlayer()
+	{
+		facingRight = !facingRight; // FacingRight becomes the opposite of the current value.
+		transform.Rotate(0f, 180f, 0f);
+		//firePoint.Rotate(0f, 180f, 0f);
 	}
 
 	private IEnumerator CoWait()
