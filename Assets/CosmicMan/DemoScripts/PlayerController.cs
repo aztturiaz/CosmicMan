@@ -5,20 +5,29 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+	#region Properties
 	public float playerSpeed;
 	public float jumpingSpeed;
-	private Rigidbody2D playerRigidbody;
-	private Animator playerAnimator;
-	private float hurtCounter;
-	private bool facingRight;
-
-	#region Ground check
-	public Transform groundCheck;
 	public Transform firePoint;
+	public GameObject bulletObject;
+	
+	#region Ground check properties
+	public Transform groundCheck;
 	public float groundCheckRadius;
 	public LayerMask groundLayer;
-	public bool isPlayerOnGround;
 	#endregion
+
+	#endregion
+
+	#region Private
+	private Rigidbody2D playerRigidbody;
+	private Animator playerAnimator;
+	private bool isPlayerOnGround;
+	private float hurtCounter;
+	private bool facingRight;
+	#endregion
+
+	
 
 	// Start is called before the first frame update
 	void Start()
@@ -121,7 +130,8 @@ public class PlayerController : MonoBehaviour
 				firePoint.position = new Vector3(firePoint.position.x, transform.position.y + 0.22f, firePoint.position.z);
 				playerAnimator.SetTrigger("FireOnAir");
 			}
-			
+
+			Shoot();
 		}
 		#endregion
 	}
@@ -131,6 +141,11 @@ public class PlayerController : MonoBehaviour
 		facingRight = !facingRight; // FacingRight becomes the opposite of the current value.
 		transform.Rotate(0f, 180f, 0f);
 		//firePoint.Rotate(0f, 180f, 0f);
+	}
+
+	private void Shoot()
+	{
+		Instantiate(bulletObject, firePoint.position, firePoint.rotation);
 	}
 
 	private IEnumerator CoWait()
