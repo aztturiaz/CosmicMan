@@ -25,9 +25,11 @@ public class PlayerController : MonoBehaviour
 	private bool isPlayerOnGround;
 	private float hurtCounter;
 	private bool facingRight;
+	public int bulletsAmount = 10;
+	private int bulletIndex;
 	#endregion
 
-	
+
 
 	// Start is called before the first frame update
 	void Start()
@@ -120,13 +122,11 @@ public class PlayerController : MonoBehaviour
 			playerAnimator.SetBool("IsFiring", true);
 			if (isPlayerOnGround)
 			{
-				//FirePoint.position.y = -0.04
 				firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
 				playerAnimator.SetTrigger("Fire");
 			}
 			else
 			{
-				//FirePoint.position.y = 0.22
 				firePoint.position = new Vector3(firePoint.position.x, transform.position.y + 0.22f, firePoint.position.z);
 				playerAnimator.SetTrigger("FireOnAir");
 			}
@@ -140,12 +140,19 @@ public class PlayerController : MonoBehaviour
 	{
 		facingRight = !facingRight; // FacingRight becomes the opposite of the current value.
 		transform.Rotate(0f, 180f, 0f);
-		//firePoint.Rotate(0f, 180f, 0f);
 	}
 
 	private void Shoot()
 	{
-		Instantiate(bulletObject, firePoint.position, firePoint.rotation);
+		/*for (int i = 0; i < bulletsAmount + 1; i++)
+		{*/
+		bulletIndex = bulletIndex % bulletsAmount;
+			GameObject bullet = BulletPool.bulletPoolInstance.GetBullet(bulletIndex++);
+			bullet.transform.position = firePoint.position;
+			bullet.transform.rotation = firePoint.rotation;
+			bullet.SetActive(true);
+		//}
+		//Instantiate(bulletObject, firePoint.position, firePoint.rotation);
 	}
 
 	private IEnumerator CoWait()

@@ -20,8 +20,18 @@ public class Bullet : MonoBehaviour
 		rigidbody2d.velocity = transform.right * bulletSpeed;
 	}
 
-	private void OnBecameInvisible()
+	private void OnEnable()
 	{
-		Destroy(parent);
+		Invoke("Destroy", 3f);
+	}
+
+	private void Destroy()
+	{
+		gameObject.SetActive(false);
+	}
+
+	private void OnDisable()
+	{
+		CancelInvoke();
 	}
 }
