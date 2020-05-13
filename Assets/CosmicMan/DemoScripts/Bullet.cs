@@ -22,7 +22,7 @@ public class Bullet : MonoBehaviour
 
 	private void OnEnable()
 	{
-		Invoke("Destroy", 3f);
+		Invoke("Destroy", 1f);
 	}
 
 	private void Destroy()

@@ -37,6 +37,8 @@ public class PlayerController : MonoBehaviour
 		playerRigidbody = GetComponent<Rigidbody2D>();
 		playerAnimator = GetComponent<Animator>();
 		facingRight = true;
+
+		BulletPool.bulletPoolInstance.totalBulletsInPool = bulletsAmount;
 	}
 
     // Update is called once per frame
@@ -123,7 +125,8 @@ public class PlayerController : MonoBehaviour
 			if (isPlayerOnGround)
 			{
 				firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
-				playerAnimator.SetTrigger("Fire");
+				if (Math.Abs(playerRigidbody.velocity.x) < 0.05f)
+					playerAnimator.SetTrigger("Fire");
 			}
 			else
 			{

@@ -473,7 +473,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
-  bulletsAmount: 10
+  bulletsAmount: 20
 --- !u!1 &1363989129
 GameObject:
   m_ObjectHideFlags: 0
