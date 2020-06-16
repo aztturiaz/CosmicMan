@@ -20,9 +20,9 @@ public class Bullet : MonoBehaviour
 		rigidbody2d.velocity = transform.right * bulletSpeed;
 	}
 
-	private void OnEnable()
+	private void OnBecameInvisible()
 	{
-		Invoke("Destroy", 1f);
+		Invoke("Destroy", 0.25f);
 	}
 
 	private void Destroy()

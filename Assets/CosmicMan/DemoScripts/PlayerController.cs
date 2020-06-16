@@ -10,7 +10,9 @@ public class PlayerController : MonoBehaviour
 	public float jumpingSpeed;
 	public Transform firePoint;
 	public GameObject bulletObject;
-	
+	public float hurtCounter;
+	public float fireCounter;
+
 	#region Ground check properties
 	public Transform groundCheck;
 	public float groundCheckRadius;
@@ -23,13 +25,29 @@ public class PlayerController : MonoBehaviour
 	private Rigidbody2D playerRigidbody;
 	private Animator playerAnimator;
 	private bool isPlayerOnGround;
-	private float hurtCounter;
+	private float vHurtCounter;
+	private float vFireCounter;
 	private bool facingRight;
 	public int bulletsAmount = 10;
 	private int bulletIndex;
+	private bool handlingAnimation = false;
+	private WaitForSeconds wait;
+
+	#region Animation Hash ID's
+	private readonly int playerSpeedID = Animator.StringToHash("PlayerSpeed");
+	private readonly int onGroundID = Animator.StringToHash("OnGround");
+	private readonly int teleporID = Animator.StringToHash("Teleport");
+	private readonly int hurtID = Animator.StringToHash("Hurt");
+	private readonly int fireID = Animator.StringToHash("Fire");
+	private readonly int fireOnAirID = Animator.StringToHash("FireOnAir");
+	private readonly int isFiringID = Animator.StringToHash("IsFiring");
+	private readonly int skillAttackID = Animator.StringToHash("SkillAttack");
 	#endregion
 
-
+	#region Animation State Hash ID's
+	//private readonly int walkingStateID = Animator.StringToHash("Base Layer.Walking");
+	#endregion
+	#endregion
 
 	// Start is called before the first frame update
 	void Start()
@@ -37,6 +55,7 @@ public class PlayerController : MonoBehaviour
 		playerRigidbody = GetComponent<Rigidbody2D>();
 		playerAnimator = GetComponent<Animator>();
 		facingRight = true;
+		wait = new WaitForSeconds(1.5f);
 
 		BulletPool.bulletPoolInstance.totalBulletsInPool = bulletsAmount;
 	}
@@ -46,7 +65,7 @@ public class PlayerController : MonoBehaviour
     {
 		isPlayerOnGround = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);		
 
-		if (hurtCounter <= 0f)
+		if (vHurtCounter <= 0f)
 		{
 			#region Horizontal Movement
 			if (Input.GetAxisRaw("Horizontal") > 0f)
@@ -86,52 +105,80 @@ public class PlayerController : MonoBehaviour
 		}
 		else
 		{
-			hurtCounter -= Time.deltaTime;
+			vHurtCounter -= Time.deltaTime;
 		}
 
+		AnimatorStateInfo stateInfo = playerAnimator.GetCurrentAnimatorStateInfo(0);
+
 		// Always checking if player on Ground or not
-		playerAnimator.SetBool("OnGround", isPlayerOnGround);
+		playerAnimator.SetBool(onGroundID, isPlayerOnGround);
 		// Always setting the Player Speed to the Animator - Idle if Horizontal PlayerSpeed < 0.05f
-		playerAnimator.SetFloat("PlayerSpeed", Mathf.Abs(playerRigidbody.velocity.x));
-		// Always setting the Player as NOT Shooting
-		playerAnimator.SetBool("IsFiring", false);
+		playerAnimator.SetFloat(playerSpeedID, Mathf.Abs(playerRigidbody.velocity.x));
+		// Always setting the Player as NOT Shooting unless the player is shooting
+		if (vFireCounter <= 0f)
+		{
+			playerAnimator.SetBool(isFiringID, false);
+		}
+		else
+		{
+			vFireCounter -= Time.deltaTime;
+		}
 
 		#region Teleport
 		if (Input.GetKeyDown(KeyCode.T) && isPlayerOnGround)
 		{
 			if (Mathf.Abs(playerRigidbody.velocity.x) < 0.05f)
-				playerAnimator.SetTrigger("Teleport");
+				playerAnimator.SetTrigger(teleporID);
 		}
 		#endregion
 
 		#region Hurt
 		else if (Input.GetKeyDown(KeyCode.H))
 		{
-			playerAnimator.SetTrigger("Hurt");
+			playerAnimator.SetTrigger(hurtID);
 			if (Mathf.Abs(playerRigidbody.velocity.x) != 0.05f)
 			{
-				Debug.Log($"Hurt animation started. Player velocity = (X= {playerRigidbody.velocity.x}, Y={playerRigidbody.velocity.y})");
 				playerRigidbody.velocity = new Vector3(0f, playerRigidbody.velocity.y, 0f);
-				hurtCounter = 0.25f;
+				vHurtCounter = hurtCounter;
 			}
 			
 		}
 		#endregion
 
 		#region Shooting
-		else if (/*Input.GetButtonDown("Fire1") || */Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.V))
+		else if (Input.GetKeyDown(KeyCode.V))
 		{
-			playerAnimator.SetBool("IsFiring", true);
+			playerAnimator.SetBool(isFiringID, true);
 			if (isPlayerOnGround)
 			{
 				firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
 				if (Math.Abs(playerRigidbody.velocity.x) < 0.05f)
-					playerAnimator.SetTrigger("Fire");
+				{
+					playerAnimator.SetTrigger(fireID);
+				}
+				else
+				{
+					playerAnimator.SetBool(isFiringID, true);
+					vFireCounter = fireCounter;
+				}	
 			}
 			else
 			{
 				firePoint.position = new Vector3(firePoint.position.x, transform.position.y + 0.22f, firePoint.position.z);
-				playerAnimator.SetTrigger("FireOnAir");
+				playerAnimator.SetTrigger(fireOnAirID);
+			}
+
+			Shoot();
+		}
+		#endregion
+
+		#region Skill Attack
+		else if (Input.GetKeyDown(KeyCode.S))
+		{
+			if (isPlayerOnGround && Math.Abs(playerRigidbody.velocity.x) == 0f && Math.Abs(playerRigidbody.velocity.y) == 0f)
+			{
+				//firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
+				playerAnimator.SetTrigger(skillAttackID);
 			}
 
 			Shoot();
@@ -147,25 +194,21 @@ public class PlayerController : MonoBehaviour
 
 	private void Shoot()
 	{
-		/*for (int i = 0; i < bulletsAmount + 1; i++)
-		{*/
 		bulletIndex = bulletIndex % bulletsAmount;
-			GameObject bullet = BulletPool.bulletPoolInstance.GetBullet(bulletIndex++);
-			bullet.transform.position = firePoint.position;
-			bullet.transform.rotation = firePoint.rotation;
-			bullet.SetActive(true);
-		//}
-		//Instantiate(bulletObject, firePoint.position, firePoint.rotation);
+		GameObject bullet = BulletPool.bulletPoolInstance.GetBullet(bulletIndex++);
+		bullet.transform.position = firePoint.position;
+		bullet.transform.rotation = firePoint.rotation;
+		bullet.SetActive(true);
 	}
 
 	private IEnumerator CoWait()
 	{
 		Debug.Log($"Coroutine started");
-		//beingHandled = true;
+		handlingAnimation = true;
 		// process pre-yield
-		yield return new WaitForSeconds(5.0f);
+		yield return wait;
 		// process post-yield
-		//beingHandled = false;
+		handlingAnimation = false;
 		Debug.Log($"Coroutine ended");
 	}
 }
