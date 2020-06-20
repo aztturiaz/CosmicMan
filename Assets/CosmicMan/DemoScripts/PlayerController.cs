@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
 	public float jumpingSpeed;
 	public Transform firePoint;
 	public GameObject bulletObject;
+	public GameObject blackHoleObject;
 	public float hurtCounter;
 	public float fireCounter;
 
@@ -58,6 +59,7 @@ public class PlayerController : MonoBehaviour
 		wait = new WaitForSeconds(1.5f);
 
 		BulletPool.bulletPoolInstance.totalBulletsInPool = bulletsAmount;
+		blackHoleObject.SetActive(false);
 	}
 
     // Update is called once per frame
@@ -177,11 +179,14 @@ public class PlayerController : MonoBehaviour
 		{
 			if (isPlayerOnGround && Math.Abs(playerRigidbody.velocity.x) == 0f && Math.Abs(playerRigidbody.velocity.y) == 0f)
 			{
-				//firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
-				playerAnimator.SetTrigger(skillAttackID);
+				if (!blackHoleObject.activeSelf)
+				{
+					playerAnimator.SetTrigger(skillAttackID);
+					firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
+					blackHoleObject.transform.position = firePoint.position;
+					blackHoleObject.SetActive(true);
+				}
 			}
-
-			Shoot();
 		}
 		#endregion
 	}

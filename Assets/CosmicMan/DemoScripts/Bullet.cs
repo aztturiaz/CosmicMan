@@ -6,13 +6,13 @@ public class Bullet : MonoBehaviour
 {
 	public float bulletSpeed;
 	private Rigidbody2D rigidbody2d;
-	private GameObject parent;
+	//private GameObject parent;
 
 	// Start is called before the first frame update
 	void Start()
     {
 		rigidbody2d = GetComponent<Rigidbody2D>();
-		parent = GetComponent<GameObject>();
+		//parent = GetComponent<GameObject>();
     }
 
 	private void OnBecameVisible()
