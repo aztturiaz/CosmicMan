@@ -8,11 +8,11 @@ public class PlayerController : MonoBehaviour
 	#region Properties
 	public float playerSpeed;
 	public float jumpingSpeed;
-	public Transform firePoint;
+	public Transform shootingPoint;
 	public GameObject bulletObject;
 	public GameObject blackHoleObject;
 	public float hurtCounter;
-	public float fireCounter;
+	public float shootingCounter;
 
 	#region Ground check properties
 	public Transform groundCheck;
@@ -27,11 +27,10 @@ public class PlayerController : MonoBehaviour
 	private Animator playerAnimator;
 	private bool isPlayerOnGround;
 	private float vHurtCounter;
-	private float vFireCounter;
+	private float vShootingCounter;
 	private bool facingRight;
 	public int bulletsAmount = 10;
 	private int bulletIndex;
-	private bool handlingAnimation = false;
 	private WaitForSeconds wait;
 
 	#region Animation Hash ID's
@@ -39,15 +38,12 @@ public class PlayerController : MonoBehaviour
 	private readonly int onGroundID = Animator.StringToHash("OnGround");
 	private readonly int teleporID = Animator.StringToHash("Teleport");
 	private readonly int hurtID = Animator.StringToHash("Hurt");
-	private readonly int fireID = Animator.StringToHash("Fire");
-	private readonly int fireOnAirID = Animator.StringToHash("FireOnAir");
-	private readonly int isFiringID = Animator.StringToHash("IsFiring");
+	private readonly int shootingID = Animator.StringToHash("Shoot");
+	private readonly int shootingOnAirID = Animator.StringToHash("ShootOnAir");
+	private readonly int isShootingID = Animator.StringToHash("IsShooting");
 	private readonly int skillAttackID = Animator.StringToHash("SkillAttack");
 	#endregion
 
-	#region Animation State Hash ID's
-	//private readonly int walkingStateID = Animator.StringToHash("Base Layer.Walking");
-	#endregion
 	#endregion
 
 	// Start is called before the first frame update
@@ -117,13 +113,13 @@ public class PlayerController : MonoBehaviour
 		// Always setting the Player Speed to the Animator - Idle if Horizontal PlayerSpeed < 0.05f
 		playerAnimator.SetFloat(playerSpeedID, Mathf.Abs(playerRigidbody.velocity.x));
 		// Always setting the Player as NOT Shooting unless the player is shooting
-		if (vFireCounter <= 0f)
+		if (vShootingCounter <= 0f)
 		{
-			playerAnimator.SetBool(isFiringID, false);
+			playerAnimator.SetBool(isShootingID, false);
 		}
 		else
 		{
-			vFireCounter -= Time.deltaTime;
+			vShootingCounter -= Time.deltaTime;
 		}
 
 		#region Teleport
@@ -143,38 +139,37 @@ public class PlayerController : MonoBehaviour
 				playerRigidbody.velocity = new Vector3(0f, playerRigidbody.velocity.y, 0f);
 				vHurtCounter = hurtCounter;
 			}
-			
 		}
 		#endregion
 
 		#region Shooting
 		else if (Input.GetKeyDown(KeyCode.V))
 		{
-			playerAnimator.SetBool(isFiringID, true);
+			playerAnimator.SetBool(isShootingID, true);
 			if (isPlayerOnGround)
 			{
-				firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
+				shootingPoint.position = new Vector3(shootingPoint.position.x, transform.position.y - 0.04f, shootingPoint.position.z);
 				if (Math.Abs(playerRigidbody.velocity.x) < 0.05f)
 				{
-					playerAnimator.SetTrigger(fireID);
+					playerAnimator.SetTrigger(shootingID);
 				}
 				else
 				{
-					playerAnimator.SetBool(isFiringID, true);
-					vFireCounter = fireCounter;
+					playerAnimator.SetBool(isShootingID, true);
+					vShootingCounter = shootingCounter;
 				}	
 			}
 			else
 			{
-				firePoint.position = new Vector3(firePoint.position.x, transform.position.y + 0.22f, firePoint.position.z);
-				playerAnimator.SetTrigger(fireOnAirID);
+				shootingPoint.position = new Vector3(shootingPoint.position.x, transform.position.y + 0.22f, shootingPoint.position.z);
+				playerAnimator.SetTrigger(shootingOnAirID);
 			}
 
 			Shoot();
 		}
 		#endregion
 
-		#region Skill Attack
+		#region Skill Attack - Black Hole
 		else if (Input.GetKeyDown(KeyCode.S))
 		{
 			if (isPlayerOnGround && Math.Abs(playerRigidbody.velocity.x) == 0f && Math.Abs(playerRigidbody.velocity.y) == 0f)
@@ -182,8 +177,8 @@ public class PlayerController : MonoBehaviour
 				if (!blackHoleObject.activeSelf)
 				{
 					playerAnimator.SetTrigger(skillAttackID);
-					firePoint.position = new Vector3(firePoint.position.x, transform.position.y - 0.04f, firePoint.position.z);
-					blackHoleObject.transform.position = firePoint.position;
+					shootingPoint.position = new Vector3(shootingPoint.position.x, transform.position.y - 0.04f, shootingPoint.position.z);
+					blackHoleObject.transform.position = shootingPoint.position;
 					blackHoleObject.SetActive(true);
 				}
 			}
@@ -201,19 +196,8 @@ public class PlayerController : MonoBehaviour
 	{
 		bulletIndex = bulletIndex % bulletsAmount;
 		GameObject bullet = BulletPool.bulletPoolInstance.GetBullet(bulletIndex++);
-		bullet.transform.position = firePoint.position;
-		bullet.transform.rotation = firePoint.rotation;
+		bullet.transform.position = shootingPoint.position;
+		bullet.transform.rotation = shootingPoint.rotation;
 		bullet.SetActive(true);
-	}
-
-	private IEnumerator CoWait()
-	{
-		Debug.Log($"Coroutine started");
-		handlingAnimation = true;
-		// process pre-yield
-		yield return wait;
-		// process post-yield
-		handlingAnimation = false;
-		Debug.Log($"Coroutine ended");
 	}
 }
