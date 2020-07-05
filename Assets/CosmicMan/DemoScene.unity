@@ -920,7 +920,7 @@ MonoBehaviour:
     type: 3}
   blackHoleObject: {fileID: 99492701}
   hurtCounter: 0.25
-  shootingCounter: 0
+  shootingCounter: 0.2
   groundCheck: {fileID: 1363989130}
   groundCheckRadius: 0.2
   groundLayer:

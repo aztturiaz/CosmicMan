@@ -143,7 +143,7 @@ public class PlayerController : MonoBehaviour
 		#endregion
 
 		#region Shooting
-		else if (Input.GetKeyDown(KeyCode.V))
+		else if (Input.GetKeyDown(KeyCode.F))
 		{
 			playerAnimator.SetBool(isShootingID, true);
 			if (isPlayerOnGround)
